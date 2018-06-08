@@ -1,29 +1,34 @@
 package packetprocessors
 
-import "fmt"
+import (
+	"fmt"
+	"kmipserver/kmip"
+	"errors"
+	"context"
+)
 
 type ProtocolVersion struct {}
 
 
 
 func init() {
-	Kmpiprocessor["420069"] = new(ProtocolVersion)
+	kmip.Kmpiprocessor[4325481] = new(ProtocolVersion)
 }
 
 
-func (r * ProtocolVersion) ProcessPacket(t *TTLV, req []byte, response []byte , processor Processor) ([]byte,error) {
+func (r * ProtocolVersion) ProcessPacket(ctx context.Context, t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
 
-	fmt.Println("ProtocolVersion",string(t.Tag), string(t.Type) , t.Length, t.Value)
+	fmt.Println("ProtocolVersion",t.Tag, t.Type , t.Length, t.Value)
 
-	f,s := ReadTTLV(req)
-	p := GetProcessor(string(s.Tag))
-
-	if(len(req[f:])) <= 0 {
-		return nil, nil
+	if(len(req)) <= 0 {
+		return nil,errors.New("Incomplete Packet")
 	}
+
+	f,s := kmip.ReadTTLV(req)
+	p := kmip.GetProcessor(s.Tag)
 
 	if p!= nil {
-		p.ProcessPacket(&s,req[f:], nil, nil)
+		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
 	}
-	return nil,nil
+	return nil,errors.New("Invalid Packet")
 }

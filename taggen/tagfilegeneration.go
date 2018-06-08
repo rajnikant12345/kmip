@@ -6,43 +6,51 @@ import (
 	"bufio"
 	"io"
 	"strings"
+	"strconv"
 )
 
-func GenerateTagFile(tagname string, tagvalue string) {
+func GenerateTagFile(tagname string, tagvalue int) {
 	f,err := os.Create(tagname+".go")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Fprintf(f,"package packetprocessors\n\n")
-	fmt.Fprintf(f,"import \"fmt\"\n\n")
-
-	fmt.Fprintf(f,"type %s struct {}\n\n",tagname)
 	str := `
+package packetprocessors
+
+import (
+	"fmt"
+	"kmipserver/kmip"
+	"errors"
+)
+
+type %s struct {}
+
+
 
 func init() {
-	Kmpiprocessor["%s"] = new(%s)
+	kmip.Kmpiprocessor[%d] = new(%s)
 }
 
 
-func (r * %s) ProcessPacket(t *TTLV, req []byte, response []byte , processor Processor) ([]byte,error) {
+func (r * %s) ProcessPacket(t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
 
-	fmt.Println("%s",string(t.Tag), string(t.Type) , t.Length, t.Value)
+	fmt.Println("%s",t.Tag, t.Type , t.Length, t.Value)
 
-	f,s := ReadTTLV(req)
-	p := GetProcessor(string(s.Tag))
+	f,s := kmip.ReadTTLV(req)
+	p := kmip.GetProcessor(s.Tag)
 
 	if(len(req[f:])) <= 0 {
-		return nil, nil
+		return nil,errors.New("Incomplete Packet")
 	}
-
 	if p!= nil {
 		p.ProcessPacket(&s,req[f:], nil, nil)
 	}
-	return nil,nil
+	return nil,errors.New("Invalid Packet")
 }
+
 `
-	fmt.Fprintf(f,str,tagvalue, tagname,tagname,tagname)
+fmt.Fprintf(f,str,tagname,tagvalue, tagname,tagname,tagname)
 }
 
 var TagMap map[string]string
@@ -65,9 +73,11 @@ func LoadTagsType(tagfile string) {
 
 
 func main() {
-	LoadTagsType(os.Args[1])
-	for i,j := range TagMap {
-		GenerateTagFile(j,i)
-	}
+	//LoadTagsType(os.Args[1])
+	//for i,j := range TagMap {
+	i,_ := strconv.ParseInt(os.Args[2],16,32)
+
+	GenerateTagFile(os.Args[1],int(i))
+	//}
 
 }

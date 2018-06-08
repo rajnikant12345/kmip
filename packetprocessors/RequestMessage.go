@@ -1,29 +1,31 @@
 package packetprocessors
 
-import "fmt"
+import (
+	"fmt"
+	"kmipserver/kmip"
+	"context"
+	"errors"
+)
 
 type RequestMessage struct {}
 
-
-
 func init() {
-	Kmpiprocessor["420078"] = new(RequestMessage)
+	kmip.Kmpiprocessor[4325496] = new(RequestMessage)
 }
 
+func (r * RequestMessage) ProcessPacket(ctx context.Context , t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
 
-func (r * RequestMessage) ProcessPacket(t *TTLV, req []byte, response []byte , processor Processor) ([]byte,error) {
+	fmt.Println("RequestMessage",t.Tag, t.Type , t.Length, t.Value)
 
-	fmt.Println("RequestMessage",string(t.Tag), string(t.Type) , t.Length, t.Value)
-
-	f,s := ReadTTLV(req)
-	p := GetProcessor(string(s.Tag))
-
-	if(len(req[f:])) <= 0 {
-		return nil, nil
+	if(len(req)) <= 0 {
+		return nil,errors.New("Incomplete Packet")
 	}
 
+	f,s := kmip.ReadTTLV(req)
+	p := kmip.GetProcessor(s.Tag)
+
 	if p!= nil {
-		p.ProcessPacket(&s,req[f:], nil, nil)
+		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
 	}
 	return nil,nil
 }
