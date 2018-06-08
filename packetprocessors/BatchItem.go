@@ -26,7 +26,7 @@ func (r * BatchItem) ProcessPacket(ctx context.Context ,t *kmip.TTLV, req []byte
 
 	f,s := kmip.ReadTTLV(req)
 	p := kmip.GetProcessor(s.Tag)
-3
+
 	if p!= nil {
 		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
 	}
