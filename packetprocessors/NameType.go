@@ -1,37 +1,33 @@
-
 package packetprocessors
 
 import (
-	"fmt"
-	"kmipserver/kmip"
 	"errors"
-	"context"
+	"fmt"
+	
+	"kmipserver/kmip"
+	"kmipserver/server"
 )
 
-type NameType struct {}
-
-
+type NameType struct{}
 
 func init() {
-	kmip.Kmpiprocessor[4325460] = new(NameType)
+	server.Kmpiprocessor[4325460] = new(NameType)
 }
 
+func (r *NameType) ProcessPacket(ctx *kmip.Message, t *kmip.TTLV, req []byte) error {
 
-func (r * NameType) ProcessPacket(ctx context.Context , t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
+	fmt.Println("NameType", t.Type, t.Length)
 
-	fmt.Println("NameType",t.Tag, t.Type , t.Length, t.Value)
-
-	if(len(req)) <= 0 {
-		return nil,errors.New("Incomplete Packet")
+	if (len(req)) <= 0 {
+		return errors.New("Cannot parse")
 	}
 
-	f,s := kmip.ReadTTLV(req)
-	p := kmip.GetProcessor(s.Tag)
+	f, s := kmip.ReadTTLV(req)
+	p := server.GetProcessor(s.Tag)
 
-
-	if p!= nil {
-		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
+	if p != nil {
+		ctx.BatchList[len(ctx.BatchList)-1].Attr.Name.NameType = kmip.StringToInt(string(t.Value))
+		p.ProcessPacket(ctx, &s, req[f:])
 	}
-	return nil,errors.New("Invalid Packet")
+	return errors.New("Not supported tag")
 }
-

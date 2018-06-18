@@ -1,36 +1,32 @@
-
 package packetprocessors
 
 import (
-	"fmt"
-	"kmipserver/kmip"
 	"errors"
-	"context"
+	"fmt"
+
+	"kmipserver/kmip"
+	"kmipserver/server"
 )
 
-type TemplateAttribute struct {}
-
-
+type TemplateAttribute struct{}
 
 func init() {
-	kmip.Kmpiprocessor[4325521] = new(TemplateAttribute)
+	server.Kmpiprocessor[4325521] = new(TemplateAttribute)
 }
 
+func (r *TemplateAttribute) ProcessPacket(ctx *kmip.Message, t *kmip.TTLV, req []byte) error {
 
-func (r * TemplateAttribute) ProcessPacket(ctx context.Context , t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
+	fmt.Println("TemplateAttribute", t.Type, t.Length)
 
-	fmt.Println("TemplateAttribute",t.Tag, t.Type , t.Length, t.Value)
-
-	if(len(req)) <= 0 {
-		return nil,errors.New("Incomplete Packet")
+	if (len(req)) <= 0 {
+		return errors.New("Cannot parse")
 	}
 
-	f,s := kmip.ReadTTLV(req)
-	p := kmip.GetProcessor(s.Tag)
+	f, s := kmip.ReadTTLV(req)
+	p := server.GetProcessor(s.Tag)
 
-	if p!= nil {
-		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
+	if p != nil {
+		p.ProcessPacket(ctx, &s, req[f:])
 	}
-	return nil,errors.New("Invalid Packet")
+	return errors.New("Not supported tag")
 }
-

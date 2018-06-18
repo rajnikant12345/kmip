@@ -1,34 +1,32 @@
 package packetprocessors
 
 import (
-	"fmt"
-	"kmipserver/kmip"
 	"errors"
-	"context"
+	"fmt"
+
+	"kmipserver/kmip"
+	"kmipserver/server"
 )
 
-type ProtocolVersion struct {}
-
-
+type ProtocolVersion struct{}
 
 func init() {
-	kmip.Kmpiprocessor[4325481] = new(ProtocolVersion)
+	server.Kmpiprocessor[4325481] = new(ProtocolVersion)
 }
 
+func (r *ProtocolVersion) ProcessPacket(ctx *kmip.Message, t *kmip.TTLV, req []byte) error {
 
-func (r * ProtocolVersion) ProcessPacket(ctx context.Context, t *kmip.TTLV, req []byte, response []byte , processor kmip.Processor) ([]byte,error) {
+	fmt.Println("ProtocolVersion", t.Type, t.Length)
 
-	fmt.Println("ProtocolVersion",t.Tag, t.Type , t.Length, t.Value)
-
-	if(len(req)) <= 0 {
-		return nil,errors.New("Incomplete Packet")
+	if (len(req)) <= 0 {
+		return errors.New("Cannot parse")
 	}
 
-	f,s := kmip.ReadTTLV(req)
-	p := kmip.GetProcessor(s.Tag)
+	f, s := kmip.ReadTTLV(req)
+	p := server.GetProcessor(s.Tag)
 
-	if p!= nil {
-		p.ProcessPacket(ctx, &s,req[f:], nil, nil)
+	if p != nil {
+		p.ProcessPacket(ctx, &s, req[f:])
 	}
-	return nil,errors.New("Invalid Packet")
+	return errors.New("Not supported tag")
 }
